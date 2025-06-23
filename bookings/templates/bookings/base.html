@@ -1,0 +1,276 @@
+{% comment %} <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Booking System{% endblock %}</title>
+    <style>
+        /* Basic CSS for a better look */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #f4f7f6; color: #333; }
+        header { background-color: #2c3e50; color: white; padding: 15px 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
+        header h1 { margin: 0; font-size: 1.8em; }
+        nav a { margin-left: 20px; text-decoration: none; color: white; font-weight: bold; transition: color 0.3s ease; }
+        nav a:hover { color: #ecf0f1; }
+        .container { max-width: 960px; margin: 20px auto; padding: 20px; background-color: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
+        .message-container { margin: 20px auto; max-width: 960px; }
+        .messages { list-style: none; padding: 0; margin: 0; }
+        .message { padding: 12px 20px; margin-bottom: 10px; border-radius: 5px; font-weight: bold; }
+        .message.success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .message.error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .message.info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        .errorlist { color: red; font-size: 0.9em; margin-top: 5px; }
+        form label { display: block; margin-bottom: 8px; font-weight: bold; color: #555; }
+        form input[type="text"],
+        form input[type="number"],
+        form input[type="email"],
+        form input[type="password"],
+        form input[type="datetime-local"],
+        form textarea,
+        form select {
+            width: calc(100% - 22px); /* Adjust for padding and border */
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 1em;
+        }
+        form button {
+            background-color: #3498db;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+        }
+        form button:hover { background-color: #2980b9; }
+        .service-item { border: 1px solid #eee; padding: 15px; margin-bottom: 20px; border-radius: 5px; background-color: #fff; }
+        .service-item h2 { color: #3498db; margin-top: 0; }
+        .booking-list-item { border-bottom: 1px dashed #eee; padding-bottom: 10px; margin-bottom: 10px; }
+        .booking-list-item:last-child { border-bottom: none; margin-bottom: 0; }
+        footer { text-align: center; padding: 20px; margin-top: 30px; background-color: #f0f0f0; color: #666; font-size: 0.9em; }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <header>
+        <h1><a href="{% url 'bookings:service_list' %}" style="color: white; text-decoration: none;">Booking System</a></h1>
+        <nav>
+            <a href="{% url 'bookings:service_list' %}">Available Services</a>
+            {% if user.is_authenticated %}
+                <a href="{% url 'bookings:user_bookings' %}">My Bookings</a>
+                <a href="{% url 'bookings:user_profile' %}">My Profile</a>
+                {% if user.is_staff %}
+                    <a href="{% url 'bookings:staff_dashboard' %}" style="color: yellow; font-weight: bold;">Staff Dashboard</a>
+                {% endif %}
+                <span>Hello, {{ user.username }}!</span>
+                <form method="POST" action="{% url 'logout' %}">
+                    {% csrf_token %}
+                    <button type="submit">Logout</button>
+                </form>
+            {% else %}
+                <a href="{% url 'login' %}">Login</a>
+                <a href="{% url 'bookings:register' %}">Register</a>
+                <a href="{% url 'admin:index' %}">Admin</a> {# Keep Admin link for quick access in dev #}
+            {% endif %}
+        </nav>
+    </header>
+
+    <div class="message-container">
+        {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                    <li class="message {{ message.tags }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
+
+    <div class="container">
+        {% block content %}
+        {% endblock %}
+    </div>
+
+    <footer>
+        <p>&copy; 2025 Online Booking System</p>
+    </footer>
+    {% block extra_js %}{% endblock %}
+</body>
+</html> {% endcomment %}
+
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Booking System{% endblock %}</title>
+    <style>
+        /* General Layout for Sticky Footer */
+        html, body {
+            height: 100%; /* Ensure html and body take full height */
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            display: flex; /* Flexbox for layout */
+            flex-direction: column; /* Arrange children vertically */
+        }
+
+        /* Header Styling */
+        header {
+            background-color: #2c3e50; /* Header background color */
+            color: white;
+            padding: 15px 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0; /* Prevent header from shrinking */
+        }
+        header h1 { margin: 0; font-size: 1.8em; }
+        nav a { margin-left: 20px; text-decoration: none; color: white; font-weight: bold; transition: color 0.3s ease; }
+        nav a:hover { color: #ecf0f1; }
+        
+        /* Logout button in header nav */
+        header nav form {
+            display: inline; /* Keep button on the same line as links */
+            margin-left: 20px; /* Space it out from links */
+        }
+        header nav form button {
+            background: none;
+            border: none;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 0;
+            font-size: 1em; /* Match link font size */
+            transition: color 0.3s ease;
+        }
+        header nav form button:hover {
+            color: #ecf0f1;
+        }
+        
+        /* Main content area */
+        .container {
+            max-width: 960px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            flex-grow: 1; /* Allows container (and thus main content) to grow and push footer down */
+        }
+
+        /* Message styling */
+        .message-container { margin: 20px auto; max-width: 960px; }
+        .messages { list-style: none; padding: 0; margin: 0; }
+        .message { padding: 12px 20px; margin-bottom: 10px; border-radius: 5px; font-weight: bold; }
+        .message.success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .message.error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .message.info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        
+        /* Form styling */
+        .errorlist { color: red; font-size: 0.9em; margin-top: 5px; }
+        form label { display: block; margin-bottom: 8px; font-weight: bold; color: #555; }
+        form input[type="text"],
+        form input[type="number"],
+        form input[type="email"],
+        form input[type="password"],
+        form input[type="datetime-local"],
+        form textarea,
+        form select {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 1em;
+        }
+        form button {
+            background-color: #3498db;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+        }
+        form button:hover { background-color: #2980b9; }
+        
+        /* Specific content styling */
+        .service-item { border: 1px solid #eee; padding: 15px; margin-bottom: 20px; border-radius: 5px; background-color: #fff; }
+        .service-item h2 { color: #3498db; margin-top: 0; }
+        .booking-list-item { border-bottom: 1px dashed #eee; padding-bottom: 10px; margin-bottom: 10px; }
+        .booking-list-item:last-child { border-bottom: none; margin-bottom: 0; }
+        
+        /* Footer Styling - MODIFIED */
+        footer {
+            text-align: center;
+            padding: 20px;
+            /* Removed margin-top: 30px; as flex-grow handles spacing */
+            background-color: #2c3e50; /* <--- SAME AS HEADER */
+            color: white; /* <--- MATCH HEADER TEXT COLOR */
+            font-size: 0.9em;
+            flex-shrink: 0; /* Prevent footer from shrinking */
+            box-shadow: 0 -2px 5px rgba(0,0,0,0.1); /* Optional: subtle shadow at the top */
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <header>
+        <h1><a href="{% url 'bookings:service_list' %}" style="color: white; text-decoration: none;">Booking System</a></h1>
+        <nav>
+            <a href="{% url 'bookings:service_list' %}">Available Services</a>
+            {% if user.is_authenticated %}
+                <a href="{% url 'bookings:user_bookings' %}">My Bookings</a>
+                <a href="{% url 'bookings:user_profile' %}">My Profile</a>
+                {% if user.is_staff %}
+                    <a href="{% url 'bookings:staff_dashboard' %}" style="color: yellow; font-weight: bold;">Staff Dashboard</a>
+                {% endif %}
+                <span style="color: white; margin-left: 20px;">Hello, {{ user.username }}!</span>
+                <form method="POST" action="{% url 'logout' %}">
+                    {% csrf_token %}
+                    <button type="submit">Logout</button>
+                </form>
+            {% else %}
+                <a href="{% url 'login' %}">Login</a>
+                <a href="{% url 'register' %}">Register</a>
+                <a href="{% url 'admin:index' %}">Admin</a>
+            {% endif %}
+        </nav>
+    </header>
+
+    <div class="message-container">
+        {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                    <li class="message {{ message.tags }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
+
+    {# The main content needs to be flexible to push the footer down #}
+    {# The '.container' class currently wraps the block content, which is fine, but body needs flex #}
+    <div class="container">
+        {% block content %}
+        {% endblock %}
+    </div>
+
+    <footer>
+        <p>&copy; 2025 Online Booking System</p>
+    </footer>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

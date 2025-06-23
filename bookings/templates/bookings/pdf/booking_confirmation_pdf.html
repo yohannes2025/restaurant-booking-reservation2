@@ -1,0 +1,71 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Booking Confirmation - PDF</title>
+    <style>
+        /* This CSS will be used by WeasyPrint for the PDF generation */
+        body { font-family: 'Helvetica', 'Arial', sans-serif; margin: 0; padding: 0; font-size: 10pt; line-height: 1.5; color: #333; }
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        h1 { color: #2c3e50; text-align: center; margin-bottom: 30px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        h2 { color: #3498db; margin-top: 25px; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        .section { margin-bottom: 20px; }
+        .detail-item { margin-bottom: 8px; }
+        .detail-item strong { display: inline-block; width: 150px; color: #555; }
+        .note { background-color: #f0f8ff; padding: 15px; border-left: 4px solid #b3d9ff; margin-top: 30px; font-size: 0.9em; }
+        .footer { text-align: center; margin-top: 50px; font-size: 8pt; color: #777; }
+        .logo { max-width: 150px; display: block; margin: 0 auto 20px; } /* If you have a logo */
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            {# Add your logo here #}
+            <img src="{% static 'img/logo.png' %}" alt="Company Logo" class="logo">
+            <h1>Booking Confirmation</h1>
+        </div>
+
+        <div class="section">
+            <p>Dear {{ user.username }},</p>
+            <p>Thank you for your recent booking with our system. This document serves as your official booking confirmation.</p>
+        </div>
+
+        <div class="section">
+            <h2>Booking Details</h2>
+            <div class="detail-item"><strong>Booking ID:</strong> {{ booking.id }}</div>
+            <div class="detail-item"><strong>Service Name:</strong> {{ booking.service.name }}</div>
+            <div class="detail-item"><strong>Description:</strong> {{ booking.service.description }}</div>
+            <div class="detail-item"><strong>Price:</strong> ${{ booking.service.price }}</div>
+            <div class="detail-item"><strong>Duration:</strong> {{ booking.service.duration_minutes }} minutes</div>
+            <div class="detail-item"><strong>Start Time:</strong> {{ booking.start_time|date:"F j, Y H:i" }} {{ booking.start_time.tzname }}</div>
+            <div class="detail-item"><strong>End Time:</strong> {{ booking.end_time|date:"F j, Y H:i" }} {{ booking.end_time.tzname }}</div>
+            <div class="detail-item"><strong>Status:</strong> {{ booking.get_status_display }}</div>
+            <div class="detail-item"><strong>Booked On:</strong> {{ booking.created_at|date:"F j, Y H:i" }}</div>
+        </div>
+
+        <div class="section">
+            <h2>Customer Information</h2>
+            <div class="detail-item"><strong>Name:</strong> {{ user.first_name }} {{ user.last_name }} ({{ user.username }})</div>
+            <div class="detail-item"><strong>Email:</strong> {{ user.email }}</div>
+            {% if user.userprofile.phone_number %}
+            <div class="detail-item"><strong>Phone:</strong> {{ user.userprofile.phone_number }}</div>
+            {% endif %}
+            {% if user.userprofile.address %}
+            <div class="detail-item"><strong>Address:</strong> {{ user.userprofile.address|linebreaksbr }}</div>
+            {% endif %}
+        </div>
+
+        <div class="note">
+            <p>Please keep this confirmation for your records. If you need to make any changes or have questions, please contact us.</p>
+            <p>This booking is subject to our terms and conditions.</p>
+        </div>
+
+        <div class="footer">
+            <p>Generated on: {{ current_date|date:"F j, Y" }}</p>
+            <p>&copy; {% now "Y" %} Your Booking System. All rights reserved.</p>
+            <p>For support, please visit yourbookingsystem.com</p>
+        </div>
+    </div>
+</body>
+</html>

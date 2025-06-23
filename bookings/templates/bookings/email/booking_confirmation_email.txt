@@ -1,0 +1,30 @@
+Dear {{ user.username }},
+
+Thank you for your booking with {{ site_name }}!
+
+Your reservation for {{ booking.service.name }} has been successfully confirmed.
+
+--- Booking Details ---
+Service: {{ booking.service.name }}
+Description: {{ booking.service.description }}
+Start Time: {{ booking.start_time|date:"F j, Y H:i" }} {{ booking.start_time.tzname }}
+End Time: {{ booking.end_time|date:"F j, Y H:i" }} {{ booking.end_time.tzname }}
+Duration: {{ booking.service.duration_minutes }} minutes
+Price: ${{ booking.service.price }}
+Booking Status: {{ booking.get_status_display }}
+Booking ID: {{ booking.id }}
+---
+
+You can view all your bookings and manage them by visiting your dashboard:
+{{ booking_url }}
+
+A detailed PDF confirmation is attached to this email.
+
+We look forward to seeing you!
+
+Best regards,
+The {{ site_name }} Team
+
+---
+This is an automated email, please do not reply.
+© {% now "Y" %} {{ site_name }}. All rights reserved.

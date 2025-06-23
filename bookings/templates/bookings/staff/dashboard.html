@@ -1,0 +1,379 @@
+{% extends 'bookings/base.html' %}
+{% load static %} {# Required for static files #}
+
+{% block title %}Staff Dashboard{% endblock %}
+
+{% block content %}
+    <h1>Staff Dashboard</h1>
+
+    <div class="dashboard-summary">
+        <div class="card">
+            <h3>Total Tables</h3>
+            <p>{{ total_tables }}</p>
+            <a href="{% url 'bookings:staff_table_list' %}">Manage Tables</a>
+        </div>
+        <div class="card">
+            <h3>Available Tables</h3>
+            <p>{{ available_tables }}</p>
+        </div>
+        <div class="card">
+            <h3>Total Bookings</h3>
+            <p>{{ total_bookings }}</p>
+            <a href="{% url 'bookings:staff_booking_list' %}">View All Bookings</a>
+        </div>
+        <div class="card">
+            <h3>Pending Bookings</h3>
+            <p>{{ pending_bookings }}</p>
+        </div>
+        <div class="card">
+            <h3>Confirmed Bookings (Upcoming)</h3>
+            <p>{{ confirmed_bookings }}</p>
+        </div>
+        <div class="card">
+            <h3>Calendar View</h3>
+            <p>&nbsp;</p> {# Placeholder to maintain card height #}
+            <a href="{% url 'bookings:staff_calendar' %}">Go to Calendar</a>
+        </div>
+    </div>
+
+    <div class="dashboard-section">
+        <h2>Upcoming Bookings (Next 10)</h2>
+        {% if upcoming_bookings %}
+            <ul>
+                {% for booking in upcoming_bookings %}
+                    <li>
+                        <a href="{% url 'bookings:staff_booking_detail' booking.pk %}">{{ booking.service.name }}</a>
+                        (User: {{ booking.user.username }})
+                        at {{ booking.start_time|date:"Y-m-d H:i" }}
+                        {% if booking.table %}(Table: {{ booking.table.name }}){% endif %}
+                        - Status: {{ booking.get_status_display }}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No upcoming bookings.</p>
+        {% endif %}
+    </div>
+
+    <div class="dashboard-section">
+        <h2>Analytics</h2>
+        <div style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center;">
+            <div style="flex: 1; min-width: 300px; max-width: 500px; background-color: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                <h3>Monthly Confirmed Bookings</h3>
+                <canvas id="monthlyBookingsChart"></canvas>
+            </div>
+            <div style="flex: 1; min-width: 300px; max-width: 500px; background-color: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                <h3>Top 5 Most Booked Services</h3>
+                <canvas id="servicePopularityChart"></canvas>
+            </div>
+            <div style="flex: 1; min-width: 300px; max-width: 500px; background-color: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                <h3>Monthly Revenue</h3>
+                <canvas id="monthlyRevenueChart"></canvas>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    .dashboard-summary {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    .dashboard-summary .card {
+        background-color: #f9f9f9;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 20px;
+        text-align: center;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .dashboard-summary .card h3 {
+        margin-top: 0;
+        color: #3498db;
+        font-size: 1.1em;
+    }
+    .dashboard-summary .card p {
+        font-size: 2.0em;
+        margin: 10px 0;
+        font-weight: bold;
+        color: #2c3e50;
+        flex-grow: 1; /* Allows text to take up space */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .dashboard-summary .card a {
+        display: inline-block;
+        margin-top: 10px;
+        padding: 8px 15px;
+        background-color: #3498db;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        font-size: 0.9em;
+        white-space: nowrap; /* Prevent button text from wrapping */
+    }
+    .dashboard-section {
+        margin-top: 30px;
+    }
+    .dashboard-section ul {
+        list-style: none;
+        padding: 0;
+    }
+    .dashboard-section li {
+        background-color: #fff;
+        border: 1px solid #eee;
+        padding: 12px;
+        margin-bottom: 10px;
+        border-radius: 5px;
+    }
+    canvas {
+        max-width: 100%;
+        height: 250px; /* Adjust height as needed */
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/chart.umd.js' %}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Monthly Bookings Chart
+        const monthlyBookingsCtx = document.getElementById('monthlyBookingsChart').getContext('2d');
+        new Chart(monthlyBookingsCtx, {
+            type: 'bar',
+            data: {
+                labels: {{ monthly_bookings_labels|safe }},
+                datasets: [{
+                    label: 'Confirmed Bookings',
+                    data: {{ monthly_bookings_data|safe }},
+                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Number of Bookings'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Month (YYYY-MM)'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Service Popularity Chart
+        const servicePopularityCtx = document.getElementById('servicePopularityChart').getContext('2d');
+        new Chart(servicePopularityCtx, {
+            type: 'doughnut',
+            data: {
+                labels: {{ service_popularity_labels|safe }},
+                datasets: [{
+                    label: 'Bookings',
+                    data: {{ service_popularity_data|safe }},
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.7)',
+                        'rgba(54, 162, 235, 0.7)',
+                        'rgba(255, 206, 86, 0.7)',
+                        'rgba(75, 192, 192, 0.7)',
+                        'rgba(153, 102, 255, 0.7)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed !== null) {
+                                    label += context.parsed;
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Monthly Revenue Chart
+        const monthlyRevenueCtx = document.getElementById('monthlyRevenueChart').getContext('2d');
+        new Chart(monthlyRevenueCtx, {
+            type: 'line',
+            data: {
+                labels: {{ monthly_revenue_labels|safe }},
+                datasets: [{
+                    label: 'Total Revenue (€)', /* Use Euro symbol since location is Germany */
+                    data: {{ monthly_revenue_data|safe }},
+                    backgroundColor: 'rgba(75, 192, 192, 0.4)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Revenue (€)'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Month (YYYY-MM)'
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}
+
+{% comment %} {% extends 'bookings/base.html' %}
+
+{% block title %}Staff Dashboard{% endblock %}
+
+{% block content %}
+    <h1>Staff Dashboard</h1>
+
+    <div class="dashboard-summary">
+        <div class="card">
+            <h3>Total Tables</h3>
+            <p>{{ total_tables }}</p>
+            <a href="{% url 'bookings:staff_table_list' %}">Manage Tables</a>
+        </div>
+        <div class="card">
+            <h3>Available Tables</h3>
+            <p>{{ available_tables }}</p>
+        </div>
+        <div class="card">
+            <h3>Total Bookings</h3>
+            <p>{{ total_bookings }}</p>
+            <a href="{% url 'bookings:staff_booking_list' %}">View All Bookings</a>
+        </div>
+        <div class="card">
+            <h3>Pending Bookings</h3>
+            <p>{{ pending_bookings }}</p>
+        </div>
+        <div class="card">
+            <h3>Confirmed Bookings</h3>
+            <p>{{ confirmed_bookings }}</p>
+        </div>
+    </div>
+
+    <div class="dashboard-section">
+        <h2>Upcoming Bookings</h2>
+        {% if upcoming_bookings %}
+            <ul>
+                {% for booking in upcoming_bookings %}
+                    <li>
+                        <a href="{% url 'bookings:staff_booking_detail' booking.pk %}">{{ booking.service.name }}</a>
+                        (User: {{ booking.user.username }})
+                        at {{ booking.start_time|date:"Y-m-d H:i" }}
+                        {% if booking.table %}(Table: {{ booking.table.name }}){% endif %}
+                        - Status: {{ booking.get_status_display }}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No upcoming bookings.</p>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    .dashboard-summary {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    .dashboard-summary .card {
+        background-color: #f9f9f9;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 20px;
+        text-align: center;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+    .dashboard-summary .card h3 {
+        margin-top: 0;
+        color: #3498db;
+    }
+    .dashboard-summary .card p {
+        font-size: 2.5em;
+        margin: 10px 0;
+        font-weight: bold;
+        color: #2c3e50;
+    }
+    .dashboard-summary .card a {
+        display: inline-block;
+        margin-top: 10px;
+        padding: 8px 15px;
+        background-color: #3498db;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        font-size: 0.9em;
+    }
+    .dashboard-section {
+        margin-top: 30px;
+    }
+    .dashboard-section ul {
+        list-style: none;
+        padding: 0;
+    }
+    .dashboard-section li {
+        background-color: #fff;
+        border: 1px solid #eee;
+        padding: 12px;
+        margin-bottom: 10px;
+        border-radius: 5px;
+    }
+</style>
+{% endblock %} {% endcomment %}
+
+

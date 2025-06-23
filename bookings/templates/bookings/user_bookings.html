@@ -1,0 +1,29 @@
+{% extends 'bookings/base.html' %}
+
+{% block title %}My Bookings{% endblock %}
+
+{% block content %}
+    <h1>My Bookings</h1>
+    {% if bookings %}
+        <ul>
+            {% for booking in bookings %}
+                <li class="booking-list-item">
+                    <h3>{{ booking.service.name }}</h3>
+                    <p><strong>Start Time:</strong> {{ booking.start_time|date:"Y-m-d H:i" }}</p>
+                    <p><strong>End Time:</strong> {{ booking.end_time|date:"Y-m-d H:i" }}</p>
+                    <p><strong>Status:</strong> {{ booking.get_status_display }}</p> {# Displays human-readable choice #}
+                    {% if booking.can_cancel %}
+                        <a href="{% url 'bookings:cancel_booking' booking.pk %}">Cancel Booking</a>
+                    {% elif not booking.is_upcoming %}
+                        <p style="color: gray;">Booking has passed.</p>
+                    {% else %}
+                        <p style="color: gray;">Cannot cancel within 1 hour of start time or if status is not pending.</p>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>You have no bookings yet.</p>
+        <p><a href="{% url 'bookings:service_list' %}">Browse available services</a></p>
+    {% endif %}
+{% endblock %}

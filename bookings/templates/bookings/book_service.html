@@ -1,0 +1,100 @@
+{% extends 'bookings/base.html' %}
+
+{% block title %}Book {{ service.name }}{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+{% endblock %}
+
+{% block content %}
+    <h1>Book {{ service.name }}</h1>
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.service }} {# Hidden service ID #}
+
+        {% if form.errors %}
+            <div class="errorlist">
+                <p>Please correct the following errors:</p>
+                <ul>
+                    {% for field, errors in form.errors.items %}
+                        {% for error in errors %}
+                            <li>{{ field|title }}: {{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                    {% if form.non_field_errors %}
+                        {% for error in form.non_field_errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    {% endif %}
+                </ul>
+            </div>
+        {% endif %}
+
+        <p>
+            <label for="{{ form.start_time.id_for_label }}">Select Date and Time:</label>
+            {{ form.start_time }}
+            {% if form.start_time.help_text %}
+                <span class="helptext">{{ form.start_time.help_text }}</span>
+            {% endif %}
+            {% if form.start_time.errors %}
+                <ul class="errorlist">
+                    {% for error in form.start_time.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </p>
+
+        <button type="submit">Confirm Booking</button>
+    </form>
+
+    <h2>Available Time Slots (Approximate)</h2>
+    <p>These are suggested available slots. Final confirmation upon booking.</p>
+    {% if available_slots %}
+        {% for day_slots in available_slots %}
+            <h3>{{ day_slots.date|date:"l, F jS" }}</h3>
+            {% if day_slots.slots %}
+                <ul style="display: flex; flex-wrap: wrap; list-style: none; padding: 0;">
+                    {% for slot in day_slots.slots %}
+                        <li style="margin: 5px; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; background-color: #eaf6ff; cursor: pointer;"
+                            onclick="document.getElementById('{{ form.start_time.id_for_label }}').value = '{{ slot|date:"Y-m-d H:i" }}';"
+                        >
+                            {{ slot|date:"H:i" }}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No available slots for this day.</p>
+            {% endif %}
+        {% endfor %}
+    {% else %}
+        <p>No available slots found for the next few days.</p>
+    {% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        flatpickr("#{{ form.start_time.id_for_label }}", {
+            enableTime: true,
+            dateFormat: "Y-m-d H:i",
+            minuteIncrement: {{ service.duration_minutes }}, // Increment by service duration
+            minDate: "today",
+            altInput: true, // For better display
+            altFormat: "F j, Y H:i",
+            // You can add more options here, like disabling specific dates or times
+            // disable: [
+            //     function(date) {
+            //         // disable Mondays
+            //         return (date.getDay() === 1);
+            //     }
+            // ],
+            // minTime: "09:00",
+            // maxTime: "17:00",
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,10 @@
+{% extends 'bookings/base.html' %}
+
+{% block title %}Booking Successful!{% endblock %}
+
+{% block content %}
+    <h1>Booking Successful!</h1>
+    <p>Your booking has been successfully placed.</p>
+    <p><a href="{% url 'bookings:user_bookings' %}">View My Bookings</a></p>
+    <p><a href="{% url 'bookings:service_list' %}">Book Another Service</a></p>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends 'bookings/base.html' %}
+
+{% block title %}Delete Table: {{ table.name }}{% endblock %}
+
+{% block content %}
+    <h1>Delete Table: {{ table.name }}</h1>
+    <p>Are you sure you want to delete table <strong>"{{ table.name }}"</strong>?</p>
+    <p style="color: red; font-weight: bold;">This action cannot be undone and will also remove any bookings directly linked to this table (if 'on_delete=models.CASCADE' is used for the booking's table foreign key).</p>
+
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="button-danger">Yes, Delete</button>
+        <a href="{% url 'bookings:staff_table_list' %}">No, Go Back</a>
+    </form>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    .button-danger {
+        background-color: #e74c3c;
+        color: white;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 1em;
+        transition: background-color 0.3s ease;
+    }
+    .button-danger:hover {
+        background-color: #c0392b;
+    }
+</style>
+{% endblock %}

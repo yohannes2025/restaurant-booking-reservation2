@@ -1,0 +1,14 @@
+{% extends 'bookings/base.html' %}
+
+{% block title %}My Profile{% endblock %}
+
+{% block content %}
+    <h1>My Profile</h1>
+
+    <p><strong>Username:</strong> {{ user.username }}</p>
+    <p><strong>Email:</strong> {{ user.email }}</p>
+    <p><strong>Phone Number:</strong> {% if profile.phone_number %}{{ profile.phone_number }}{% else %}N/A{% endif %}</p>
+    <p><strong>Address:</strong> {% if profile.address %}{{ profile.address|linebreaksbr }}{% else %}N/A{% endif %}</p>
+
+    <p><a href="{% url 'bookings:edit_user_profile' %}">Edit Profile</a></p>
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends 'bookings/base.html' %}
+
+{% block title %}Manage Tables{% endblock %}
+
+{% block content %}
+    <h1>Manage Tables</h1>
+    <p><a href="{% url 'bookings:staff_table_add' %}">Add New Table</a></p>
+
+    {% if tables %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Capacity</th>
+                    <th>Available</th>
+                    <th>Location</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for table in tables %}
+                    <tr>
+                        <td><a href="{% url 'bookings:staff_table_detail' table.pk %}">{{ table.name }}</a></td>
+                        <td>{{ table.capacity }}</td>
+                        <td>{% if table.is_available %}Yes{% else %}No{% endif %}</td>
+                        <td>{{ table.location|default:"N/A" }}</td>
+                        <td>
+                            <a href="{% url 'bookings:staff_table_edit' table.pk %}">Edit</a> |
+                            <a href="{% url 'bookings:staff_table_delete' table.pk %}">Delete</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No tables have been added yet.</p>
+    {% endif %}
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+    th, td {
+        border: 1px solid #ddd;
+        padding: 10px;
+        text-align: left;
+    }
+    th {
+        background-color: #f2f2f2;
+        font-weight: bold;
+    }
+    tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+</style>
+{% endblock %}

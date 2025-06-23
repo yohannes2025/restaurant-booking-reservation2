@@ -1,0 +1,146 @@
+{% comment %} {% extends 'bookings/base.html' %}
+
+{% block title %}Booking #{{ booking.id }} Details{% endblock %}
+
+{% block content %}
+    <h1>Booking Details #{{ booking.id }}</h1>
+
+    <p><strong>User:</strong> {{ booking.user.username }} ({{ booking.user.email }})</p>
+    <p><strong>Service:</strong> {{ booking.service.name }}</p>
+    <p><strong>Table:</strong> {% if booking.table %}<a href="{% url 'bookings:staff_table_detail' booking.table.pk %}">{{ booking.table.name }}</a> (Capacity: {{ booking.table.capacity }}){% else %}Not Assigned{% endif %}</p>
+    <p><strong>Start Time:</strong> {{ booking.start_time|date:"F j, Y H:i" }} {{ booking.start_time.tzname }}</p>
+    <p><strong>End Time:</strong> {{ booking.end_time|date:"F j, Y H:i" }} {{ booking.end_time.tzname }}</p>
+    <p><strong>Current Status:</strong> {{ booking.get_status_display }}</p>
+    <p><strong>Booked On:</strong> {{ booking.created_at|date:"F j, Y H:i" }}</p>
+    <p><strong>Last Updated:</strong> {{ booking.updated_at|date:"F j, Y H:i" }}</p>
+
+    <h2>Actions</h2>
+    <p>
+        {% if booking.status == 'pending' %}
+            <a href="{% url 'bookings:staff_booking_action' booking.pk %}?action=confirm" class="button">Confirm Booking</a>
+        {% else %}
+            <span class="button" style="background-color: #ccc; cursor: not-allowed;">Confirm Booking</span>
+        {% endif %}
+
+        {% if booking.status != 'cancelled' %}
+            <a href="{% url 'bookings:staff_booking_action' booking.pk %}?action=cancel" class="button button-danger">Cancel Booking</a>
+        {% else %}
+            <span class="button button-danger" style="background-color: #ccc; cursor: not-allowed;">Cancel Booking</span>
+        {% endif %}
+        <a href="{% url 'bookings:staff_booking_list' %}" class="button" style="background-color: #6c757d;">Back to All Bookings</a>
+    </p>
+
+{% endblock %}
+{% block extra_head %}
+<style>
+    .button {
+        display: inline-block;
+        padding: 10px 15px;
+        margin-right: 10px;
+        background-color: #3498db;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        font-size: 0.9em;
+        transition: background-color 0.3s ease;
+    }
+    .button:hover { background-color: #2980b9; }
+    .button-danger { background-color: #e74c3c; }
+    .button-danger:hover { background-color: #c0392b; }
+</style>
+{% endblock %} {% endcomment %}
+
+
+{% extends 'bookings/base.html' %}
+
+{% block title %}Booking #{{ booking.id }} Details{% endblock %}
+
+{% block content %}
+    <h1>Booking Details #{{ booking.id }}</h1>
+
+    <p><strong>User:</strong> {{ booking.user.username }} ({{ booking.user.email }})</p>
+    <p><strong>Service:</strong> {{ booking.service.name }}</p>
+    <p><strong>Table:</strong> {% if booking.table %}<a href="{% url 'bookings:staff_table_detail' booking.table.pk %}">{{ booking.table.name }}</a> (Capacity: {{ booking.table.capacity }}){% else %}Not Assigned{% endif %}</p>
+    <p><strong>Start Time:</strong> {{ booking.start_time|date:"F j, Y H:i" }} {{ booking.start_time.tzname }}</p>
+    <p><strong>End Time:</strong> {{ booking.end_time|date:"F j, Y H:i" }} {{ booking.end_time.tzname }}</p>
+    <p><strong>Current Status:</strong> {{ booking.get_status_display }}</p>
+    <p><strong>Booked On:</strong> {{ booking.created_at|date:"F j, Y H:i" }}</p>
+    <p><strong>Last Updated:</strong> {{ booking.updated_at|date:"F j, Y H:i" }}</p>
+
+    <h2>Actions</h2>
+    <div class="action-buttons">
+        {% if booking.status == 'pending' %}
+            <form method="post" action="{% url 'bookings:staff_booking_action' booking.pk %}" style="display: inline-block;">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="confirm">
+                <button type="submit" class="button">Confirm Booking</button>
+            </form>
+        {% else %}
+            <span class="button disabled">Confirm Booking</span>
+        {% endif %}
+
+        {% if booking.status != 'cancelled' %}
+            <form method="post" action="{% url 'bookings:staff_booking_action' booking.pk %}" style="display: inline-block;">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="cancel">
+                <button type="submit" class="button button-danger">Cancel Booking</button>
+            </form>
+        {% else %}
+            <span class="button button-danger disabled">Cancel Booking</span>
+        {% endif %}
+
+        {# Example for assigning a table. You'd need to fetch available tables #}
+        {# and allow selecting one. For simplicity, just an empty form to show structure #}
+        <form method="post" action="{% url 'bookings:staff_booking_action' booking.pk %}" style="display: inline-block; margin-left: 10px;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="assign_table">
+            <select name="table_id" class="form-control" style="width: auto; display: inline-block; margin-right: 5px;">
+                <option value="">Assign Table...</option>
+                {% for table_option in all_tables %} {# You need to pass all_tables from view context #}
+                    <option value="{{ table_option.pk }}" {% if booking.table == table_option %}selected{% endif %}>
+                        {{ table_option.name }} (Capacity: {{ table_option.capacity }})
+                    </option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="button" style="background-color: #28a745;">Assign</button>
+        </form>
+
+        <a href="{% url 'bookings:staff_booking_list' %}" class="button" style="background-color: #6c757d; margin-left: 10px;">Back to All Bookings</a>
+    </div>
+
+{% endblock %}
+{% block extra_head %}
+<style>
+    .action-buttons form, .action-buttons span {
+        margin-right: 10px;
+        margin-bottom: 10px; /* For better stacking on small screens */
+    }
+    .button {
+        display: inline-block;
+        padding: 10px 15px;
+        background-color: #3498db;
+        color: white;
+        text-decoration: none;
+        border: none; /* Add border:none for buttons */
+        border-radius: 5px;
+        font-size: 0.9em;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+    .button:hover { background-color: #2980b9; }
+    .button-danger { background-color: #e74c3c; }
+    .button-danger:hover { background-color: #c0392b; }
+    .button.disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+        opacity: 0.7;
+    }
+    .form-control { /* Basic styling for select */
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 1em;
+        box-sizing: border-box;
+    }
+</style>
+{% endblock %}

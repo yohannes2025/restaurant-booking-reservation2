@@ -1,0 +1,19 @@
+{% extends 'bookings/base.html' %}
+
+{% block title %}{{ service.name }} Details{% endblock %}
+
+{% block content %}
+    <h1>{{ service.name }}</h1>
+    <p><strong>Description:</strong> {{ service.description }}</p>
+    <p><strong>Price:</strong> ${{ service.price }}</p>
+    <p><strong>Duration:</strong> {{ service.duration_minutes }} minutes</p>
+    <p><strong>Max Bookings per Slot:</strong> {{ service.max_bookings_per_slot }}</p>
+
+    {% if service.is_available %}
+        <a href="{% url 'bookings:book_service' service.pk %}" class="button">Book This Service</a>
+    {% else %}
+        <p style="color: gray;">This service is currently not available for booking.</p>
+    {% endif %}
+
+    <p><a href="{% url 'bookings:service_list' %}">Back to Services</a></p>
+{% endblock %}

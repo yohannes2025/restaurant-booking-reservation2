@@ -1,0 +1,107 @@
+{# bookings/templates/registration/register.html #}
+{% extends 'bookings/base.html' %}
+{% load static %}
+
+{% block title %}Register{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <h1>Register</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }} {# Renders each field as a paragraph #}
+        <button type="submit" class="button">Register</button>
+    </form>
+    <p>Already have an account? <a href="{% url 'login' %}">Login here</a>.</p>
+</div>
+
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    .form-container {
+        max-width: 500px;
+        margin: 50px auto;
+        padding: 30px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        background-color: #fff;
+    }
+    .form-container h1 {
+        text-align: center;
+        color: #2c3e50;
+        margin-bottom: 25px;
+    }
+    .form-container p {
+        margin-bottom: 15px;
+    }
+    .form-container label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+        color: #555;
+    }
+    .form-container input[type="text"],
+    .form-container input[type="email"],
+    .form-container input[type="password"] {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 15px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box; /* Ensures padding doesn't add to the width */
+        font-size: 1em;
+    }
+    .form-container .helptext {
+        font-size: 0.85em;
+        color: #777;
+        margin-top: -10px;
+        margin-bottom: 10px;
+        display: block;
+    }
+    .form-container .errorlist {
+        color: #e74c3c;
+        list-style-type: none;
+        padding: 0;
+        margin-top: -10px;
+        margin-bottom: 10px;
+        font-size: 0.9em;
+    }
+    .form-container button.button {
+        width: 100%;
+        padding: 12px;
+        background-color: #3498db;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-size: 1.1em;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+    .form-container button.button:hover {
+        background-color: #2980b9;
+    }
+    .form-container p a {
+        color: #3498db;
+        text-decoration: none;
+    }
+    .form-container p a:hover {
+        text-decoration: underline;
+    }
+</style>
+{% endblock %}
+
+{% comment %} {% extends 'bookings/base.html' %}
+
+{% block title %}Register{% endblock %}
+
+{% block content %}
+    <h2>Register</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Register</button>
+    </form>
+    <p>Already have an account? <a href="{% url 'login' %}">Login here</a>.</p>
+{% endblock %} {% endcomment %}

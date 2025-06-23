@@ -1,0 +1,98 @@
+{% extends 'bookings/base.html' %}
+{% load static %}
+
+{% block title %}Booking Calendar (Staff){% endblock %}
+
+{% block extra_head %}
+<link href="{% static 'css/fullcalendar/main.min.css' %}" rel="stylesheet" />
+<style>
+    #calendar {
+        max-width: 100%;
+        margin: 40px auto;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background-color: white;
+    }
+    .fc-event {
+        padding: 3px 5px;
+        border-radius: 3px;
+        cursor: pointer;
+        font-size: 0.85em;
+    }
+    .loading-indicator {
+        text-align: center;
+        padding: 20px;
+        font-weight: bold;
+        color: #555;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+    <h1>Booking Calendar</h1>
+    <p>This calendar displays all pending and confirmed bookings. Click on an event to view its details.</p>
+
+    <div id="calendar"></div>
+    <div id="loading-indicator" class="loading-indicator" style="display:none;">Loading bookings...</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/fullcalendar/main.min.js' %}"></script>
+<script src="{% static 'js/fullcalendar/locales-all.min.js' %}"></script> {# Optional: for localized calendar #}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var calendarEl = document.getElementById('calendar');
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: '{{ calendar_settings.initialView }}',
+            slotMinTime: '{{ calendar_settings.slotMinTime }}',
+            slotMaxTime: '{{ calendar_settings.slotMaxTime }}',
+            firstDay: {{ calendar_settings.firstDay }},
+            nowIndicator: {{ calendar_settings.nowIndicator|lower }},
+            weekends: {{ calendar_settings.weekends|lower }},
+            editable: {{ calendar_settings.editable|lower }},
+            dayMaxEvents: {{ calendar_settings.dayMaxEvents|lower }},
+            headerToolbar: {
+                left: '{{ calendar_settings.headerToolbar.left }}',
+                center: '{{ calendar_settings.headerToolbar.center }}',
+                right: '{{ calendar_settings.headerToolbar.right }}'
+            },
+            navLinks: true, // can click day/week names to navigate views
+            eventSourceSuccess: function(content, xhr) {
+                // console.log("Events loaded successfully:", content);
+                return content; // Return content as is
+            },
+            eventSourceFailure: function(xhr) {
+                console.error("Error loading events:", xhr);
+                alert('Error loading calendar events. Please try again.');
+            },
+            events: {
+                url: '{% url "bookings:staff_calendar_api_events" %}',
+                failure: function() {
+                    document.getElementById('loading-indicator').style.display = 'none';
+                    alert('There was an error while fetching events!');
+                }
+            },
+            eventDidMount: function(info) {
+                // Custom styling based on booking status
+                info.el.style.color = 'white';
+                info.el.style.fontWeight = 'bold';
+                // Optional: Add a title attribute for native tooltip
+                info.el.title = info.event.title;
+            },
+            eventClick: function(info) {
+                // Redirect to booking detail page on click
+                if (info.event.url) {
+                    window.open(info.event.url, "_self"); // Opens in same tab
+                    info.jsEvent.preventDefault(); // Prevent default link behavior
+                }
+            },
+            loading: function(isLoading) {
+                // Show/hide loading indicator
+                document.getElementById('loading-indicator').style.display = isLoading ? 'block' : 'none';
+            }
+        });
+        calendar.render();
+    });
+</script>
+{% endblock %}

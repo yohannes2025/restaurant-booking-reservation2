@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Booking Confirmation - Your Booking System</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        .header { text-align: center; margin-bottom: 20px; }
+        .header h1 { color: #2c3e50; }
+        .content p { margin-bottom: 10px; }
+        .details { background-color: #eaf6ff; padding: 15px; border-left: 5px solid #3498db; margin-top: 20px; }
+        .details strong { color: #2c3e50; }
+        .button-container { text-align: center; margin-top: 30px; }
+        .button { display: inline-block; padding: 10px 20px; background-color: #3498db; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold; }
+        .footer { text-align: center; margin-top: 40px; font-size: 0.8em; color: #777; }
+        .logo { max-width: 150px; margin-bottom: 15px; } /* If you add a logo */
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Booking Confirmation</h1>
+        </div>
+        <div class="content">
+            <p>Dear {{ user.username }},</p>
+            <p>Thank you for your booking with {{ site_name }}!</p>
+            <p>Your reservation for <strong>{{ booking.service.name }}</strong> has been successfully confirmed.</p>
+
+            <div class="details">
+                <p><strong>Service:</strong> {{ booking.service.name }}</p>
+                <p><strong>Description:</strong> {{ booking.service.description }}</p>
+                <p><strong>Start Time:</strong> {{ booking.start_time|date:"F j, Y H:i" }} {{ booking.start_time.tzname }}</p>
+                <p><strong>End Time:</strong> {{ booking.end_time|date:"F j, Y H:i" }} {{ booking.end_time.tzname }}</p>
+                <p><strong>Duration:</strong> {{ booking.service.duration_minutes }} minutes</p>
+                <p><strong>Price:</strong> ${{ booking.service.price }}</p>
+                <p><strong>Booking Status:</strong> {{ booking.get_status_display }}</p>
+                <p><strong>Booking ID:</strong> {{ booking.id }}</p>
+            </div>
+
+            <p>You can view all your bookings and manage them by visiting your dashboard:</p>
+            <div class="button-container">
+                <a href="{{ booking_url }}" class="button">View My Bookings</a>
+            </div>
+
+            <p>A detailed PDF confirmation is attached to this email.</p>
+            <p>We look forward to seeing you!</p>
+            <p>Best regards,<br>The {{ site_name }} Team</p>
+        </div>
+        <div class="footer">
+            <p>This is an automated email, please do not reply.</p>
+            <p>&copy; {% now "Y" %} {{ site_name }}. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

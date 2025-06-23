@@ -1,0 +1,216 @@
+{% extends 'bookings/base.html' %}
+{% load static %} {# Required for static files #}
+
+{% block title %}All Bookings (Staff){% endblock %}
+
+{% block content %}
+    <h1>All Bookings</h1>
+
+    <div class="filter-section">
+        <h2>Filter Bookings</h2>
+        <form method="get" class="filter-form">
+            {% csrf_token %} {# Required if method is POST, good practice for GET too if complex forms #}
+            {% for field in filter_form %}
+                <div class="filter-field">
+                    {{ field.label_tag }}
+                    {{ field }}
+                    {% if field.help_text %}
+                        <p class="helptext">{{ field.help_text }}</p>
+                    {% endif %}
+                    {% for error in field.errors %}
+                        <span class="errorlist">{{ error }}</span>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+            <div class="filter-buttons">
+                <button type="submit">Apply Filters</button>
+                <a href="{% url 'bookings:staff_booking_list' %}" class="button" style="background-color: #6c757d;">Reset Filters</a>
+            </div>
+        </form>
+    </div>
+
+    {% if bookings %}
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>User</th>
+                    <th>Service</th>
+                    <th>Table</th>
+                    <th>Start Time</th>
+                    <th>End Time</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for booking in bookings %}
+                    <tr>
+                        <td>{{ booking.id }}</td>
+                        <td>{{ booking.user.username }}</td>
+                        <td>{{ booking.service.name }}</td>
+                        <td>{% if booking.table %}{{ booking.table.name }}{% else %}N/A{% endif %}</td>
+                        <td>{{ booking.start_time|date:"Y-m-d H:i" }}</td>
+                        <td>{{ booking.end_time|date:"Y-m-d H:i" }}</td>
+                        <td>{{ booking.get_status_display }}</td>
+                        <td>
+                            <a href="{% url 'bookings:staff_booking_detail' booking.pk %}">Details</a>
+                            {# Direct actions now use POST, link opens detail page #}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% if is_paginated %}
+            <div class="pagination">
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">previous</a>
+                {% endif %}
+                <span>
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                </span>
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">next</a>
+                {% endif %}
+            </div>
+        {% endif %}
+
+    {% else %}
+        <p>No bookings found matching your criteria.</p>
+    {% endif %}
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    .filter-section {
+        background-color: #f9f9f9;
+        border: 1px solid #eee;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 30px;
+    }
+    .filter-section h2 {
+        margin-top: 0;
+        color: #2c3e50;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 10px;
+        margin-bottom: 15px;
+    }
+    .filter-form {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        align-items: end; /* Align items to the bottom */
+    }
+    .filter-field {
+        margin-bottom: 0; /* Remove default <p> margin */
+    }
+    .filter-form label {
+        margin-bottom: 5px; /* Adjust label spacing */
+    }
+    .filter-form .form-control { /* Apply to form controls */
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+        font-size: 1em;
+    }
+    .filter-buttons {
+        grid-column: 1 / -1; /* Span all columns */
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+    }
+    .filter-buttons button, .filter-buttons a.button {
+        padding: 10px 15px;
+        flex-grow: 1; /* Allow buttons to grow */
+        text-align: center;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+    th, td {
+        border: 1px solid #ddd;
+        padding: 10px;
+        text-align: left;
+        vertical-align: top;
+    }
+    th {
+        background-color: #f2f2f2;
+        font-weight: bold;
+    }
+    tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+</style>
+{% endblock %}
+
+{% comment %} {% extends 'bookings/base.html' %}
+
+{% block title %}All Bookings (Staff){% endblock %}
+
+{% block content %}
+    <h1>All Bookings</h1>
+
+    {% if bookings %}
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>User</th>
+                    <th>Service</th>
+                    <th>Table</th>
+                    <th>Start Time</th>
+                    <th>End Time</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for booking in bookings %}
+                    <tr>
+                        <td>{{ booking.id }}</td>
+                        <td>{{ booking.user.username }}</td>
+                        <td>{{ booking.service.name }}</td>
+                        <td>{% if booking.table %}{{ booking.table.name }}{% else %}N/A{% endif %}</td>
+                        <td>{{ booking.start_time|date:"Y-m-d H:i" }}</td>
+                        <td>{{ booking.end_time|date:"Y-m-d H:i" }}</td>
+                        <td>{{ booking.get_status_display }}</td>
+                        <td>
+                            <a href="{% url 'bookings:staff_booking_detail' booking.pk %}">Details</a>
+                            {% if booking.status == 'pending' %}
+                                | <a href="{% url 'bookings:staff_booking_action' booking.pk %}?action=confirm">Confirm</a>
+                            {% endif %}
+                            {% if booking.status != 'cancelled' %}
+                                | <a href="{% url 'bookings:staff_booking_action' booking.pk %}?action=cancel">Cancel</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% if is_paginated %}
+            <div class="pagination">
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+                {% endif %}
+                <span>
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                </span>
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}">next</a>
+                {% endif %}
+            </div>
+        {% endif %}
+
+    {% else %}
+        <p>No bookings found.</p>
+    {% endif %}
+{% endblock %} {% endcomment %}
+
+

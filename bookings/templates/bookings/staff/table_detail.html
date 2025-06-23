@@ -1,0 +1,49 @@
+{% extends 'bookings/base.html' %}
+
+{% block title %}{{ table.name }} Details{% endblock %}
+
+{% block content %}
+    <h1>Table: {{ table.name }}</h1>
+
+    <p><strong>Capacity:</strong> {{ table.capacity }}</p>
+    <p><strong>Availability:</strong> {% if table.is_available %}Available{% else %}Not Available{% endif %}</p>
+    <p><strong>Location:</strong> {{ table.location|default:"N/A" }}</p>
+
+    <p>
+        <a href="{% url 'bookings:staff_table_edit' table.pk %}">Edit Table</a> |
+        <a href="{% url 'bookings:staff_table_delete' table.pk %}">Delete Table</a> |
+        <a href="{% url 'bookings:staff_table_list' %}">Back to Table List</a>
+    </p>
+
+    <h2>Current Bookings for {{ table.name }}</h2>
+    {% if current_bookings %}
+        <ul>
+            {% for booking in current_bookings %}
+                <li>
+                    <a href="{% url 'bookings:staff_booking_detail' booking.pk %}">{{ booking.service.name }}</a>
+                    (User: {{ booking.user.username }})
+                    from {{ booking.start_time|date:"H:i" }} to {{ booking.end_time|date:"H:i" }}
+                    - Status: {{ booking.get_status_display }}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No current bookings for this table.</p>
+    {% endif %}
+
+    <h2>Upcoming Bookings for {{ table.name }}</h2>
+    {% if upcoming_bookings %}
+        <ul>
+            {% for booking in upcoming_bookings %}
+                <li>
+                    <a href="{% url 'bookings:staff_booking_detail' booking.pk %}">{{ booking.service.name }}</a>
+                    (User: {{ booking.user.username }})
+                    at {{ booking.start_time|date:"Y-m-d H:i" }}
+                    - Status: {{ booking.get_status_display }}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No upcoming bookings for this table.</p>
+    {% endif %}
+{% endblock %}

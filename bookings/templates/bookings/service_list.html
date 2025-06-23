@@ -1,0 +1,47 @@
+{% extends 'bookings/base.html' %}
+
+{% block title %}Available Services{% endblock %}
+
+{% block content %}
+    <h1>Available Services</h1>
+
+    <form method="get" action="{% url 'bookings:service_list' %}" class="search-form">
+        {{ search_form.as_p }}
+        <button type="submit">Search</button>
+    </form>
+
+    {% if services %}
+        <ul>
+            {% for service in services %}
+                <li class="service-item">
+                    <h2><a href="{% url 'bookings:service_detail' service.pk %}">{{ service.name }}</a></h2>
+                    <p>{{ service.description|truncatechars:150 }}</p>
+                    <p>Price: ${{ service.price }}</p>
+                    <p>Duration: {{ service.duration_minutes }} minutes</p>
+                    {% if service.is_available %}
+                        <a href="{% url 'bookings:book_service' service.pk %}">Book Now</a>
+                    {% else %}
+                        <p style="color: gray;">Not available for booking.</p>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+
+        {% if is_paginated %}
+            <div class="pagination">
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}">&laquo; previous</a>
+                {% endif %}
+                <span>
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                </span>
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}">next &raquo;</a>
+                {% endif %}
+            </div>
+        {% endif %}
+
+    {% else %}
+        <p>No services available yet.</p>
+    {% endif %}
+{% endblock %}
